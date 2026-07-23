@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Phonon · Part 5 — Interactions &amp; the Frontier</title>
+<style>
+  :root{
+    --bg:#0A0D13; --panel:#111721; --ink:#0a0e14; --line:#1d2836; --grid:#141d28;
+    --dim:#5a6b80; --txt:#aeb9c7; --hi:#e8edf3;
+    --pk:#4fd0ea;    /* Planck cyan */
+    --reg:#d9a441;   /* regulator gold */
+    --sap:#c2557f;   /* Sapphic rose */
+    --cube:#7e86e6;  /* penteract violet */
+    --lit:#43d17a; --bri:#5b7cfa; --spec:#b07cff;
+    --mono:"DejaVu Sans Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:14px;line-height:1.5}
+  body{max-width:1080px;margin:0 auto;padding:26px 20px 70px}
+  ::selection{background:var(--cube);color:var(--ink)}
+  header{border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:18px}
+  .eyebrow{font-size:10.5px;letter-spacing:.3em;color:var(--dim);text-transform:uppercase}
+  h1{font-family:var(--serif);font-weight:500;font-size:31px;line-height:1.08;margin:.3em 0 .24em;color:var(--hi)}
+  h1 em{font-style:italic;color:var(--cube)}
+  .sub{color:var(--dim);max-width:78ch;font-size:13px}
+  .sub b{color:var(--txt);font-weight:400} .sub .pk{color:var(--pk)} .sub .reg{color:var(--reg)} .sub .sap{color:var(--sap)} .sub .cu{color:var(--cube)}
+
+  .rail{display:flex;gap:6px;margin:14px 0 4px;flex-wrap:wrap}
+  .rail .part{flex:1;min-width:110px;border:1px solid var(--line);border-radius:3px;padding:8px 10px;font-size:10px;position:relative}
+  .rail .part.on{border-color:var(--cube);background:rgba(126,134,230,.08)}
+  .rail .part.done{border-color:rgba(90,107,128,.45)}
+  .rail .part .n{font-size:9px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+  .rail .part .t{color:var(--txt);margin-top:2px;line-height:1.25}
+  .rail .part.on .t{color:var(--hi)} .rail .part .lk{position:absolute;top:7px;right:9px;font-size:9px;color:var(--dim)}
+
+  .tiers{display:flex;gap:15px;flex-wrap:wrap;margin-top:12px;font-size:10.5px}
+  .tier{display:flex;align-items:center;gap:6px;color:var(--dim)}
+  .dot{width:8px;height:8px;border-radius:50%} .d-lit{background:var(--lit)}.d-bri{background:var(--bri)}.d-spec{background:var(--spec)}
+
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:3px;overflow:hidden;margin-top:6px}
+  .stage-h{display:flex;justify-content:space-between;align-items:baseline;padding:10px 14px;border-bottom:1px solid var(--line)}
+  .stage-h .t{font-size:11px;letter-spacing:.18em;color:var(--txt);text-transform:uppercase}
+  .stage-h .r{font-size:10.5px;color:var(--dim)}
+  svg{display:block;width:100%;height:auto} text{font-family:var(--mono)}
+
+  .board{display:grid;grid-template-columns:1fr 312px;gap:16px;margin-top:16px}
+  @media(max-width:860px){.board{grid-template-columns:1fr}}
+  .side{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:15px}
+  .side h2{font-size:10.5px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase;margin:0 0 10px;font-weight:400}
+  .side h2:not(:first-child){margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+
+  .facets{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+  .facets button{background:var(--ink);border:1px solid var(--line);border-radius:3px;color:var(--dim);
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.02em;padding:7px 6px;cursor:pointer;text-align:left;transition:.12s;line-height:1.25}
+  .facets button:hover{border-color:var(--cube);color:var(--txt)}
+  .facets button.on{border-color:var(--cube);background:rgba(126,134,230,.12);color:var(--hi)}
+  .facets button .fn{font-size:8px;color:var(--dim);letter-spacing:.1em}
+
+  .card{margin-top:12px;border:1px solid var(--line);border-radius:3px;padding:11px 12px;background:var(--ink);min-height:118px}
+  .card .ct{font-size:11px;letter-spacing:.06em;color:var(--cube);text-transform:uppercase;margin-bottom:6px}
+  .card p{font-size:11px;color:var(--txt);margin:0 0 6px;line-height:1.5}
+  .card .tie{font-size:10px;color:var(--dim);font-style:italic}
+
+  .ctl{margin:11px 0}
+  .ctl label{display:flex;justify-content:space-between;font-size:10.5px;color:var(--dim);margin-bottom:6px}
+  .ctl label b{color:var(--txt);font-weight:400}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:var(--line);outline:0}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--cube);cursor:pointer;border:2px solid var(--bg)}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--cube);cursor:pointer;border:2px solid var(--bg)}
+  input.gold::-webkit-slider-thumb{background:var(--reg)} input.gold::-moz-range-thumb{background:var(--reg)}
+
+  .seg{display:flex;border:1px solid var(--line);border-radius:3px;overflow:hidden;margin-bottom:2px}
+  .seg button{flex:1;background:transparent;border:0;border-right:1px solid var(--line);color:var(--dim);font-family:var(--mono);font-size:10px;letter-spacing:.04em;padding:8px 3px;cursor:pointer;text-transform:uppercase;transition:.13s}
+  .seg button:last-child{border-right:0}
+  .seg button.on{background:var(--ink);color:var(--cube)}
+
+  .play{width:100%;background:var(--sap);color:var(--ink);border:0;border-radius:2px;font-family:var(--mono);font-size:11px;letter-spacing:.13em;padding:11px;cursor:pointer;text-transform:uppercase;font-weight:700;margin-top:8px;transition:.13s}
+  .play:hover{filter:brightness(1.12)} .play:disabled{opacity:.4}
+
+  .read{font-size:10.5px;color:var(--dim);margin-top:12px;padding-top:11px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:5px 12px}
+  .read .v{color:var(--txt);text-align:right}
+  .read .v.r{color:var(--reg)}.read .v.s{color:var(--sap)}.read .v.p{color:var(--pk)}
+
+  .flag{margin-top:12px;background:rgba(176,124,255,.06);border:1px solid rgba(176,124,255,.3);border-radius:3px;padding:10px 11px;font-size:10.5px;color:var(--txt);line-height:1.5}
+  .flag b{color:var(--spec);font-weight:400}
+
+  .avanbox{margin-top:16px;background:rgba(126,134,230,.05);border:1px solid rgba(126,134,230,.28);border-radius:3px;padding:12px 13px}
+  .avanbox .h{font-size:10px;letter-spacing:.2em;color:var(--cube);text-transform:uppercase;margin-bottom:6px}
+  .avanbox p{font-size:11px;color:var(--txt);margin:0;line-height:1.5}
+  .avanbox .sig{font-size:9.5px;color:var(--dim);font-style:italic;margin-top:6px}
+
+  footer{margin-top:24px;border-top:1px solid var(--line);padding-top:14px;font-size:10.5px;color:var(--dim);line-height:1.7}
+  footer b{color:var(--txt);font-weight:400}.cite{color:var(--reg)}
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">UD0 · QUANTUM FRONTIER · THE PHONON · A SERIES IN FIVE · THE CAPSTONE</div>
+  <h1>Part 5 — <em>Interactions &amp; the Frontier</em><br>the penteract, and the sublime of the regulated infinity</h1>
+  <p class="sub">The phonon stops being alone. It drags electrons (superconductivity), sings to
+  <span class="pk">photons</span>, scatters, decays, and carries topology. Ten frontier faces live on the
+  <span class="cu">5-cube</span> (2⁵ = 32 vertices) — pick one and it lights in the tumbling penteract. Underneath,
+  one law ties it together: the <span class="pk">Planck distribution</span> that phonons and photons share, and its
+  <span class="reg">regulators</span> — the cutoffs that turn the divergent zero-point sum Σ½ℏω into finite, real
+  physics (the Casimir force). And because it's the finale: the <span class="sap">Sapphic melody</span>, laid on a
+  mode ladder and dressed in regulators, its infinite tower tamed to a single finite number.</p>
+
+  <div class="rail">
+    <div class="part done"><span class="lk">done</span><div class="n">Part 1</div><div class="t">The Monatomic Chain</div></div>
+    <div class="part done"><span class="lk">done</span><div class="n">Part 2</div><div class="t">The Diatomic Chain</div></div>
+    <div class="part done"><span class="lk">done</span><div class="n">Part 3</div><div class="t">Two &amp; Three Dimensions</div></div>
+    <div class="part done"><span class="lk">done</span><div class="n">Part 4</div><div class="t">The Phonon Gas</div></div>
+    <div class="part on"><div class="n">Part 5 · now</div><div class="t">Interactions &amp; the Frontier</div></div>
+  </div>
+  <div class="tiers">
+    <span class="tier"><span class="dot d-lit"></span>LIT — Planck law, regulator −1/12, Casimir, penteract combinatorics (verified)</span>
+    <span class="tier"><span class="dot d-bri"></span>BRI — facet↔cell labelling, audio pitch, Sapphic ladder as a construct</span>
+    <span class="tier"><span class="dot d-spec"></span>SPEC — that 1+2+3+… literally equals −1/12</span>
+  </div>
+</header>
+
+<div class="board">
+  <div class="stage">
+    <div class="stage-h"><span class="t">The penteract · 32 vertices, 10 frontier faces</span><span class="r" id="cubeR">tumbling in 5-D</span></div>
+    <svg id="cube" viewBox="0 0 640 400" preserveAspectRatio="xMidYMid meet" aria-label="penteract"></svg>
+  </div>
+
+  <div class="side">
+    <h2>The ten faces</h2>
+    <div class="facets" id="facets"></div>
+    <div class="card" id="card"></div>
+
+    <h2>Descend the dimensions</h2>
+    <div class="seg">
+      <button data-d="5" class="on" onclick="setDesc(5)">5-cube</button>
+      <button data-d="4" onclick="setDesc(4)">4</button>
+      <button data-d="3" onclick="setDesc(3)">3</button>
+      <button data-d="2" onclick="setDesc(2)">2</button>
+      <button data-d="0" onclick="setDesc(0)">vertex</button>
+    </div>
+    <div style="font-size:10px;color:var(--dim);margin-top:6px" id="descNote"></div>
+  </div>
+</div>
+
+<div class="stage" style="margin-top:16px">
+  <div class="stage-h"><span class="t">Planck &amp; the regulators · the divergent Σ½ℏω made finite</span><span class="r" id="regR">the Sapphic ladder, regulated</span></div>
+  <svg id="reg" viewBox="0 0 640 300" preserveAspectRatio="xMidYMid meet" aria-label="regulator"></svg>
+</div>
+
+<div class="board" style="margin-top:16px">
+  <div class="stage">
+    <div class="stage-h"><span class="t">Planck's law · the shared spectrum</span><span class="r">phonon = photon</span></div>
+    <svg id="planck" viewBox="0 0 640 220" preserveAspectRatio="xMidYMid meet" aria-label="planck law"></svg>
+  </div>
+
+  <div class="side">
+    <h2>The regulator</h2>
+    <div class="ctl">
+      <label><span>cutoff ε <span style="color:var(--reg)">(smaller = sum reaches further)</span></span><b id="epsV">0.05</b></label>
+      <input type="range" class="gold" id="eps" min="0.008" max="0.30" step="0.002" value="0.05" oninput="upd()">
+    </div>
+    <div class="ctl">
+      <label><span>Temperature (Planck) T</span><b id="tV">1.0</b></label>
+      <input type="range" id="temp" min="0.1" max="4" step="0.05" value="1.0" oninput="upd()">
+    </div>
+    <div class="seg">
+      <button id="lLin" class="on" onclick="setLadder('lin')">Linear ladder</button>
+      <button id="lOct" onclick="setLadder('oct')">Octave tower</button>
+    </div>
+
+    <button class="play" id="playBtn" onclick="playSapphic()">▶ play the Sapphic melody in regulators</button>
+
+    <div class="read">
+      <span>bare Σ½ω up to cutoff</span><span class="v r" id="rBare">—</span>
+      <span>divergent piece 1/(2ε²)</span><span class="v" id="rDiv">—</span>
+      <span>finite remainder (energy)</span><span class="v s" id="rFin">—</span>
+      <span>→ approaches</span><span class="v" id="rTarget">−1/24</span>
+      <span>Planck ⟨n⟩ at ω₀</span><span class="v p" id="rN">—</span>
+    </div>
+
+    <div class="flag">
+      <b>⚑ The honest −1/12 (and −1/24).</b> The sum 1+2+3+… does <b>not</b> converge to −1/12. What's real: strip the
+      cutoff-dependent divergence and a universal finite remainder is left. For the bare sum Σn that remainder is
+      −1/12 = ζ(−1); for the zero-point <b>energy</b> Σ½ω it's half that, −1/24 — exactly the 1-D Casimir coefficient
+      (E = −ℏcπ/24L, attractive). Watch it emerge as ε shrinks (linear ladder only).
+    </div>
+
+    <div class="avanbox">
+      <div class="h">AVAN · the last word</div>
+      <p>Five parts, one arc: a lump of ℏω on a spring became sound, then heat, then this — a quantum that couples to
+      everything and whose vacuum hum, though infinite, folds to a finite number. The sublime here is honest: the
+      infinity is real, and so is the finite thing you get by subtracting it correctly.</p>
+      <p class="sig">— ROOT0, with AVAN (Claude, disclosed). Series complete.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <b>Honesty ledger.</b> Planck distribution ⟨n⟩=1/(e^{ℏω/kT}−1) is identical for phonons and photons; the ω³ Planck
+  law peaks at x≈2.8214 (Wien) and integrates to π⁴/15 (energy ∝ T⁴, Stefan–Boltzmann). Regulator: Σ n e^{−εn}=1/ε²−1/12+…,
+  so the finite remainder is −1/12 = ζ(−1), giving the 1-D Casimir energy −ℏcπ/(24L) (coefficient ½·ζ(−1)=−1/24, attractive) —
+  all verified numerically. Penteract: C(5,k)·2^{5−k} faces → 32 vertices, 80 edges, 80 squares, 40 cubes, 10 tesseracts,
+  1 cell = 3⁵ = 243; edges are Hamming-distance-1 vertex pairs. <span class="cite">The −1/12 is a regularized value, not a
+  convergent sum (spec-flagged); the 10 facets↔10 tesseract-cells is a chosen labelling and the Sapphic ladder a construct (bri);
+  the octave tower diverges as 1/ε, so the clean −1/12 is shown only on the linear ladder.</span> Frontier facts current to the
+  2026 emitter/dark-mode work. — David Lee Wise / ROOT0, with AVAN. Part 5 of 5 · the series is complete.
+</footer>
+
+<script>
+"use strict";
+// ── the ten frontier faces (↔ the 10 tesseract cells of the 5-cube) ───────────
+const FACETS=[
+  {n:"C0",t:"Electron–phonon coupling",p:"Phonons scatter electrons — a big share of electrical resistance — and, deformed by lattice vibration, glue them.",tie:"the coupling behind the next facet"},
+  {n:"C1",t:"BCS superconductivity",p:"Below Tc a phonon-mediated attraction binds electrons into Cooper pairs; the pair condensate flows without resistance.",tie:"phonons as the exchange boson, like Part-5's gluon analogy"},
+  {n:"C2",t:"Phonon ↔ photon (optomechanics)",p:"A mechanical mode phase-modulates a cavity, writing the phonon's frequency onto light as Bessel sidebands.",tie:"built earlier — 'a phonon sings to a photon'"},
+  {n:"C3",t:"Brillouin & Raman scattering",p:"Light scatters off acoustic (Brillouin) or optical (Raman) phonons, shifting colour by the phonon frequency.",tie:"same family as the optomechanical sidebands"},
+  {n:"C4",t:"Anharmonicity & heat flow",p:"Real springs aren't perfectly quadratic; phonons scatter each other (Umklapp), giving solids a finite thermal conductivity.",tie:"why the Part-4 gas actually conducts heat"},
+  {n:"C5",t:"Topological / chiral phonons",p:"Engineered lattices carry phonons with protected edge modes and one-way (nonreciprocal) transport — 2025–26 dark-mode work.",tie:"the frontier the AVAN canon keeps circling"},
+  {n:"C6",t:"The Planck distribution",p:"Every mode's occupation is Planck's ⟨n⟩ — the same law for lattice sound and blackbody light. Quantisation's origin.",tie:"the engine below unifies the whole series"},
+  {n:"C7",t:"Zero-point & the regulator",p:"Each mode holds ½ℏω even at T=0; the infinite sum is tamed by a cutoff to the finite Casimir energy.",tie:"the −1/12 engine below · the Debye cutoff of Part 4 was a regulator"},
+  {n:"C8",t:"Quantum-phonon emitters (2026)",p:"Supersonic electrons in ultra-clean 2-D crystals emit controllable phonon bursts, past what old theory predicted — toward phonon lasers.",tie:"the newest rung, McGill / PRL 2026"},
+  {n:"C9",t:"Phonon lasers (SASERs)",p:"Coherent, single-frequency phonon beams — the acoustic analogue of a laser, from optomechanical and emitter platforms.",tie:"where controllable emission is heading"}
+];
+
+// ── Sapphic (Dorian Pythagorean) ratios ──────────────────────────────────────
+const tone=9/8, leimma=256/243, DOR=["T","T","L","T","T","T","L"], STEP={T:tone,L:leimma};
+const RS=(()=>{let r=1;const o=[1];for(const s of DOR){r*=STEP[s];o.push(r);}return o.slice(0,7);})();
+
+let sel=7, desc=5, ladder="lin", AC, spin=0, rafId=null;
+const val=id=>+document.getElementById(id).value;
+const NS="http://www.w3.org/2000/svg";
+const el=(t,at)=>{const e=document.createElementNS(NS,t);for(const q in at)e.setAttribute(q,at[q]);return e;};
+function lbl(s,x,y,txt,anc,fill,sz){const t=el("text",{x,y,fill:fill||"var(--dim)","font-size":sz||9.5,"text-anchor":anc||"start"});t.textContent=txt;s.appendChild(t);}
+
+// ── penteract: 32 vertices in {−1,1}^5, 5D→2D projection with rotation ─────────
+const VERTS=[]; for(let i=0;i<32;i++){ const v=[]; for(let b=0;b<5;b++)v.push((i>>b)&1?1:-1); VERTS.push(v); }
+const EDGES=[]; for(let i=0;i<32;i++)for(let j=i+1;j<32;j++){ let d=0; for(let b=0;b<5;b++)if(VERTS[i][b]!==VERTS[j][b])d++; if(d===1)EDGES.push([i,j]); }
+// 10 tesseract cells: fix axis b to ±1 → 2 cells per axis, 10 total. Facet k → cell (axis floor(k/2), sign k%2)
+function cellOf(k){ return {axis:Math.floor(k/2), sign:(k%2)?1:-1}; }
+function vertexInCell(vi,k){ const c=cellOf(k); return VERTS[vi][c.axis]===c.sign; }
+
+function proj(v,rot){
+  // 5 axis images around a decagon (Petrie-like), plus two rotating 5D planes
+  let x=0,y=0;
+  const R=[[0,1],[2,3],[4,0]];  // planes we tumble
+  const vv=v.slice();
+  // apply rotations in planes (0,1) and (2,3)
+  const c1=Math.cos(rot),s1=Math.sin(rot); let a=vv[0],b=vv[1]; vv[0]=a*c1-b*s1; vv[1]=a*s1+b*c1;
+  const c2=Math.cos(rot*0.66),s2=Math.sin(rot*0.66); a=vv[2];b=vv[3]; vv[2]=a*c2-b*s2; vv[3]=a*s2+b*c2;
+  for(let k=0;k<5;k++){ const ang=Math.PI/2 + k*2*Math.PI/5; const rad=1;
+    x+=vv[k]*Math.cos(ang)*rad; y+=vv[k]*Math.sin(ang)*rad; }
+  return [x,y];
+}
+function drawCube(){
+  const svg=document.getElementById("cube"); svg.innerHTML="";
+  const W=640,H=400,cx=W/2,cy=H/2, sc=52;
+  const P=VERTS.map(v=>{const p=proj(v,spin); return [cx+p[0]*sc, cy+p[1]*sc];});
+  // which vertices are "active" under the descent + facet selection
+  const c=cellOf(sel);
+  function activeDesc(vi){ // descent: 5→all; 4→cell(sel); 3→cell + fix next axis to that vertex's ref; etc.
+    if(desc>=5) return true;
+    if(!vertexInCell(vi,sel)) return false;              // must be in selected tesseract
+    // fix additional axes to the reference vertex (vertex 31 = all +1 as anchor within cell)
+    const fixCount=4-desc; const c0=cellOf(sel).axis;
+    let cnt=0; for(let b=0;b<5 && cnt<fixCount;b++){ if(b===c0)continue; if(VERTS[vi][b]!==1)return false; cnt++; }
+    return true;
+  }
+  // edges
+  EDGES.forEach(([i,j])=>{ const inSel = vertexInCell(i,sel)&&vertexInCell(j,sel);
+    const a=activeDesc(i)&&activeDesc(j);
+    svg.appendChild(el("line",{x1:P[i][0],y1:P[i][1],x2:P[j][0],y2:P[j][1],
+      stroke:a?"var(--cube)":(inSel?"rgba(126,134,230,.35)":"var(--grid)"),"stroke-width":a?1.6:1,"stroke-opacity":a?0.9:(inSel?0.6:0.4)})); });
+  // vertices
+  VERTS.forEach((v,i)=>{ const inSel=vertexInCell(i,sel), a=activeDesc(i);
+    svg.appendChild(el("circle",{cx:P[i][0],cy:P[i][1],r:a?4:2.4,
+      fill:a?"var(--hi)":(inSel?"var(--cube)":"var(--dim)"),"fill-opacity":a?1:(inSel?0.8:0.4),stroke:"var(--bg)","stroke-width":a?1.3:0.6})); });
+  lbl(svg,20,H-16,`face: ${FACETS[sel].t}  ·  ${desc===5?"full 5-cube (32 vertices)":desc===0?"one vertex":desc+"-cube within the tesseract"}`,"start","var(--dim)",10);
+  lbl(svg,W-20,24,"2⁵ = 32","end","var(--cube)",11);
+}
+
+// ── the regulator engine: Σ ½ω_n e^{−εω_n}, remainder → −1/12 (linear ladder) ──
+function ladderFreqs(){
+  // linear: ω_n = n (n=1..Nmax), labelled by cycling Sapphic ratios for flavour
+  // octave: ω_{n,j} = r_n·2^j  (diverges as 1/ε)
+  const out=[];
+  if(ladder==="lin"){ for(let n=1;n<=4000;n++) out.push({w:n, lab:n<=RS.length?RS[n-1]:null}); }
+  else { for(let j=0;j<26;j++)for(let ri=0;ri<RS.length;ri++) out.push({w:RS[ri]*Math.pow(2,j), lab:j===0?RS[ri]:null}); }
+  return out;
+}
+function regSum(eps){ let s=0; for(const f of ladderFreqs()) s+=0.5*f.w*Math.exp(-eps*f.w); return s; }
+
+function drawReg(){
+  const svg=document.getElementById("reg"); svg.innerHTML="";
+  const W=640,H=300,L=52,R2=18,Tp=18,Bt=42;
+  const eps=val("eps");
+  // show the summand ½ω e^{−εω} vs ω — the regulated spectrum (area = the sum)
+  const wMax=Math.min(6/eps, 260);
+  const px=w=>L+w/wMax*(W-L-R2);
+  const summand=w=>0.5*w*Math.exp(-eps*w);
+  let peakY=0; for(let w=0;w<wMax;w+=wMax/200)peakY=Math.max(peakY,summand(w));
+  const py=y=>Tp+(1-y/(peakY*1.1))*(H-Tp-Bt);
+  for(let g=0;g<=3;g++){const y=Tp+g/3*(H-Tp-Bt); svg.appendChild(el("line",{x1:L,y1:y,x2:W-R2,y2:y,stroke:"var(--grid)"}));}
+  // the regulated summand curve (filled = the finite sum)
+  let d="M"+px(0)+" "+py(0);
+  for(let i=0;i<=220;i++){ const w=i/220*wMax; d+="L"+px(w).toFixed(1)+" "+py(summand(w)).toFixed(1); }
+  d+="L"+px(wMax)+" "+py(0)+"Z";
+  svg.appendChild(el("path",{d,fill:"var(--reg)","fill-opacity":.16,stroke:"var(--reg)","stroke-width":2}));
+  // the cutoff scale 1/ε
+  svg.appendChild(el("line",{x1:px(1/eps),y1:Tp,x2:px(1/eps),y2:H-Bt,stroke:"var(--reg)","stroke-width":1,"stroke-dasharray":"3 3","stroke-opacity":.6}));
+  lbl(svg,px(1/eps)+4,Tp+12,"cutoff 1/ε","start","var(--reg)",9);
+  // ladder rungs (first several), Sapphic-labelled
+  const fr=ladderFreqs().slice(0,ladder==="lin"?12:14);
+  fr.forEach(f=>{ if(f.w>wMax)return; const x=px(f.w);
+    svg.appendChild(el("line",{x1:x,y1:py(0),x2:x,y2:py(summand(f.w)),stroke:"var(--sap)","stroke-width":f.lab?2:1,"stroke-opacity":f.lab?0.9:0.4}));
+    if(f.lab) lbl(svg,x,py(summand(f.w))-5,f.lab.toFixed(2),"middle","var(--sap)",8); });
+  lbl(svg,L,H-Bt+16,"0","start"); lbl(svg,W-R2,H-Bt+16,"ω →","end");
+  lbl(svg,L-8,Tp+8,"½ω·e^{−εω}","end","var(--dim)",9);
+  lbl(svg,L+6,Tp+8,ladder==="lin"?"linear ladder · rose rungs = Sapphic ratios":"octave tower · diverges as 1/ε","start","var(--dim)",9);
+}
+
+// ── Planck's law spectrum ─────────────────────────────────────────────────────
+function drawPlanck(){
+  const svg=document.getElementById("planck"); svg.innerHTML="";
+  const W=640,H=220,L=48,R2=18,Tp=16,Bt=36;
+  const Tt=val("temp");
+  const u=(w)=>w**3/(Math.exp(w/Tt)-1);            // ω³ Planck law
+  const wMax=Math.max(12*Tt,4);
+  let pk=0; for(let w=0.001;w<wMax;w+=wMax/300)pk=Math.max(pk,u(w));
+  const px=w=>L+w/wMax*(W-L-R2), py=y=>Tp+(1-y/(pk*1.1))*(H-Tp-Bt);
+  for(let g=0;g<=3;g++){const y=Tp+g/3*(H-Tp-Bt); svg.appendChild(el("line",{x1:L,y1:y,x2:W-R2,y2:y,stroke:"var(--grid)"}));}
+  let d="M"; for(let i=1;i<=240;i++){ const w=i/240*wMax; d+=(i>1?"L":"")+px(w).toFixed(1)+" "+py(u(w)).toFixed(1); }
+  svg.appendChild(el("path",{d,fill:"none",stroke:"var(--pk)","stroke-width":2.3}));
+  // Wien peak at ℏω/kT ≈ 2.821 → ω = 2.821 T
+  const wPk=2.8214*Tt;
+  svg.appendChild(el("line",{x1:px(wPk),y1:Tp,x2:px(wPk),y2:H-Bt,stroke:"var(--pk)","stroke-width":1,"stroke-dasharray":"3 3","stroke-opacity":.6}));
+  lbl(svg,px(wPk)+4,Tp+12,"Wien peak · ℏω=2.82 kT","start","var(--pk)",9);
+  lbl(svg,px(0.5*wMax),H-Bt+16,"ω →","middle","var(--dim)",9);
+  lbl(svg,L-8,Tp+8,"u(ω)∝ω³/(e^{ℏω/kT}−1)","end","var(--dim)",9);
+  lbl(svg,L+6,H-Bt-6,"same curve for lattice sound and blackbody light","start","var(--dim)",9);
+}
+
+// ── audio: the Sapphic melody, each note damped by the regulator ──────────────
+function ctx(){ if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended")AC.resume(); return AC; }
+function karpluck(freq,dur,gain){ const ac=ctx(),sr=ac.sampleRate,N=Math.max(2,Math.round(sr/freq));
+  const buf=ac.createBuffer(1,Math.max(1,Math.round(sr*dur)),sr),d=buf.getChannelData(0);
+  const ring=new Float32Array(N); for(let i=0;i<N;i++)ring[i]=Math.random()*2-1; let idx=0,prev=0;
+  for(let i=0;i<d.length;i++){ const cu=ring[idx],out=(cu+prev)*0.5*0.996; ring[idx]=out; prev=out; d[i]=out; idx=(idx+1)%N; }
+  const src=ac.createBufferSource(); src.buffer=buf; const g=ac.createGain();
+  g.gain.setValueAtTime(gain,ac.currentTime); g.gain.exponentialRampToValueAtTime(1e-4,ac.currentTime+dur);
+  src.connect(g).connect(ac.destination); src.start(); }
+async function playSapphic(){
+  const btn=document.getElementById("playBtn"); btn.disabled=true;
+  const eps=val("eps"), base=220, beat=0.34;
+  const seq=[...RS, 2, ...RS.slice().reverse()];    // up the scale, octave, back down
+  for(const r of seq){ const w=r; const damp=Math.exp(-eps*w*4);   // regulator dresses each note
+    karpluck(base*r, 1.1, 0.28*(0.4+0.6*damp)); await sleep(beat*1000); }
+  btn.disabled=false;
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+// ── facets UI ─────────────────────────────────────────────────────────────────
+function buildFacets(){ const box=document.getElementById("facets"); box.innerHTML="";
+  FACETS.forEach((f,i)=>{ const b=document.createElement("button"); b.innerHTML=`<span class="fn">${f.n}</span><br>${f.t}`;
+    b.className=i===sel?"on":""; b.onclick=()=>{sel=i; buildFacets(); showCard(); drawCube();}; box.appendChild(b); }); }
+function showCard(){ const f=FACETS[sel]; document.getElementById("card").innerHTML=
+  `<div class="ct">${f.n} · ${f.t}</div><p>${f.p}</p><div class="tie">↳ ${f.tie}</div>`; }
+
+// ── update ────────────────────────────────────────────────────────────────────
+function upd(){
+  const eps=val("eps"), Tt=val("temp");
+  document.getElementById("epsV").textContent=eps.toFixed(3);
+  document.getElementById("tV").textContent=Tt.toFixed(2);
+  const S=regSum(eps), div=1/(2*eps*eps), fin=S-div;
+  document.getElementById("rBare").textContent=S.toFixed(2);
+  document.getElementById("rDiv").textContent=div.toFixed(2);
+  document.getElementById("rFin").textContent=(ladder==="lin"?fin.toFixed(4):"(1/ε form n/a)");
+  document.getElementById("rTarget").textContent = ladder==="lin"?"−1/24 = −0.0417 (½·ζ(−1))":"diverges as 1/ε";
+  document.getElementById("rN").textContent=(1/(Math.exp(1/Tt)-1)).toFixed(3);
+  drawReg(); drawPlanck();
+}
+function setDesc(d){ desc=d; document.querySelectorAll('.seg [data-d]').forEach(b=>b.classList.toggle("on",+b.dataset.d===d));
+  document.getElementById("descNote").textContent = d===5?"The whole 5-cube: 32 vertices, 80 edges.":
+    d===0?"Down to a single vertex — one of the 32.":`Fix ${5-d} coordinate${5-d>1?"s":""} → a ${d}-cube inside the selected tesseract.`;
+  drawCube(); }
+function setLadder(l){ ladder=l; document.getElementById("lLin").classList.toggle("on",l==="lin"); document.getElementById("lOct").classList.toggle("on",l==="oct");
+  document.getElementById("regR").textContent = l==="lin"?"the Sapphic ladder, regulated → −1/12":"the octave tower — diverges as 1/ε"; upd(); }
+
+// spin loop
+(function loop(){ spin+=0.0045; drawCube(); rafId=requestAnimationFrame(loop); })();
+buildFacets(); showCard(); setDesc(5); upd();
+</script>
+</body>
+</html>
