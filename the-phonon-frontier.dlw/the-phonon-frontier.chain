@@ -1,9 +1,9 @@
 ROOT0-DLW-CHAIN-v1
 index : 1462
 slug  : the-phonon-frontier
-seal  : 82466e4a72188b3d83e9017f24b57e3d24fe4a4ace472c50061ab237c3c7dc8f
-prev  : b89011d208a73e8759e89b5cdebdd8edc7c317092fc2f949a58e4258ab832086
-link  : 9fbc5bbb5c04cb7a88767d4586ccacb95781d773c03c3a86da9bf8e06e0d98f1
-head  : 9fbc5bbb5c04cb7a88767d4586ccacb95781d773c03c3a86da9bf8e06e0d98f1
+seal  : 60b652b00e68dff8f73ae9199fe00ebb5d7ae3b9a2f98988a6321010f9722380
+prev  : 977adabf6cdc4c30136c9460e13ca705bab1e5e39d87767a9870bc862c52e041
+link  : fca607264d97b60b399968e9225738d337439863ad6c5525b571cf06530b1659
+head  : c4d41afeaef76470528856d54d86cf480a0e1c2fc8ebc60fbb9eb8e442585f2b
 
 — the tether: link = sha256(index|slug|seal|prev). the chain head commits to the whole corpus.
